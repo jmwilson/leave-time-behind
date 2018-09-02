@@ -1,15 +1,48 @@
 {
+    "env": {
+        "nrf.sdk": "/Users/james/nrf5/nRF5_SDK_15.0.0_a53641a"
+    },
     "configurations": [
         {
-            "name": "Mac",
-            "defines": [],
-            "macFrameworkPath": [
-                "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.13.sdk/System/Library/Frameworks"
+            "name": "nrf52832",
+            "defines": [
+                "BOARD_SPARKFUN",
+                "CONFIG_GPIO_AS_PINRESET",
+                "FLOAT_ABI_HARD",
+                "NRF52",
+                "NRF52832_XXAA",
+                "NRF52_PAN_74",
+                "NRF_SD_BLE_API_VERSION=6",
+                "S132",
+                "SOFTDEVICE_PRESENT",
+                "SWI_DISABLE0"
             ],
-            "compilerPath": "/usr/bin/clang",
-            "cStandard": "c11",
+            "compilerPath": "/usr/local/gcc-arm-none-eabi-7-2018-q2-update/bin/arm-none-eabi-gcc -mcpu=cortex-m4 -mthumb -mabi=aapcs -mfloat-abi=hard -mfpu=fpv4-sp-d16",
+            "cStandard": "c99",
             "cppStandard": "c++17",
-            "intelliSenseMode": "clang-x64"
+            "intelliSenseMode": "gcc-x64",
+            "includePath": [
+                "${workspaceFolder}/sparkfun/s132/config",
+                "${env:nrf.sdk}/components/ble/**",
+                "${env:nrf.sdk}/components/boards",
+                "${env:nrf.sdk}/components/drivers_ext/**",
+                "${env:nrf.sdk}/components/iot/**",
+                "${env:nrf.sdk}/components/libraries/**",
+                "${env:nrf.sdk}/components/nfc/**",
+                "${env:nrf.sdk}/components/proprietary_rf/**",
+                "${env:nrf.sdk}/components/serialization/**",
+                "${env:nrf.sdk}/components/softdevice/common",
+                "${env:nrf.sdk}/components/softdevice/mbr/nrf52832",
+                "${env:nrf.sdk}/components/softdevice/s132/headers",
+                "${env:nrf.sdk}/components/toolchain/cmsis/include",
+                "${env:nrf.sdk}/integration/nrfx",
+                "${env:nrf.sdk}/integration/nrfx/legacy",
+                "${env:nrf.sdk}/modules/nrfx/drivers/include",
+                "${env:nrf.sdk}/modules/nrfx",
+                "${env:nrf.sdk}/modules/nrfx/hal",
+                "${env:nrf.sdk}/modules/nrfx/mdk",
+                "${env:nrf.sdk}/modules/nrfx/soc"
+            ]
         }
     ],
     "version": 4

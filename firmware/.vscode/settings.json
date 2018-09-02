@@ -1,16 +1,4 @@
 {
-    "C_Cpp.default.includePath": [
-        "${HOME}/nrf5/nRF5_SDK_15.0.0_a53641a"
-    ],
-    "files.associations": {
-        "bsp_btn_ble.h": "c",
-        "ble.h": "c",
-        "ble_lesc.h": "c",
-        "ble_advertising.h": "c",
-        "ble_hci.h": "c",
-        "app_timer.h": "c",
-        "fds.h": "c",
-        "__functional_base": "cpp",
-        "ble_cts_c.h": "c"
-    }
+    "C_Cpp.autoAddFileAssociations": false,
+    "C_Cpp.intelliSenseEngineFallback": "Disabled",
 }

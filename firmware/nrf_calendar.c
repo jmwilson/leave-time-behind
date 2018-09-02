@@ -16,6 +16,8 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
+#include <stdint.h>
+
 #include "nrf_calendar.h"
 #include "nrfx_clock.h"
 #include "nrfx_rtc.h"

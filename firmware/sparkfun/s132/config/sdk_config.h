@@ -42,7 +42,6 @@
 
 #ifndef SDK_CONFIG_H
 #define SDK_CONFIG_H
-#define NRFX_CONFIG_H__
 
 // <<< Use Configuration Wizard in Context Menu >>>\n
 #ifdef USE_APP_CONFIG
