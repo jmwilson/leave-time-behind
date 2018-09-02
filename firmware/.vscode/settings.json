@@ -10,6 +10,7 @@
         "ble_hci.h": "c",
         "app_timer.h": "c",
         "fds.h": "c",
-        "__functional_base": "cpp"
+        "__functional_base": "cpp",
+        "ble_cts_c.h": "c"
     }
 }

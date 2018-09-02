@@ -36,7 +36,7 @@
 #include "nrf_sdh.h"
 #include "nrf_sdh_soc.h"
 #include "nrf_sdh_ble.h"
-#include "fds.h"
+#include "nrfx_pwm.h"
 #include "ble_conn_state.h"
 #include "nrf_ble_gatt.h"
 #include "nrf_ble_qwr.h"
@@ -95,13 +95,11 @@ NRF_BLE_QWR_DEF(m_qwr);  // Context for the Queued Write module
 BLE_ADVERTISING_DEF(m_advertising);  // Advertising module instance
 BLE_DB_DISCOVERY_DEF(m_ble_db_discovery);  // DB discovery module instance
 
-static pm_peer_id_t m_peer_id;  // Device reference handle to the current bonded central
 static uint16_t     m_cur_conn_handle = BLE_CONN_HANDLE_INVALID;  // Handle of the current connection
 
-/*
 static nrfx_pwm_t pwm_inst = NRFX_PWM_INSTANCE(0);
 static nrf_pwm_values_common_t pwm_values[] = {0};
-*/
+static const uint16_t PWM_TOP_VALUE = 1600;
 
 static ble_uuid_t m_adv_uuids[] = {{BLE_UUID_CURRENT_TIME_SERVICE, BLE_UUID_TYPE_BLE}};
 
@@ -138,18 +136,9 @@ static void pm_evt_handler(pm_evt_t const * p_evt)
                          p_evt->conn_handle,
                          p_evt->params.conn_sec_succeeded.procedure);
 
-            m_peer_id = p_evt->peer_id;
-
-            // Start peer service discovery
+            // Discover peer's services.
             err_code  = ble_db_discovery_start(&m_ble_db_discovery, p_evt->conn_handle);
             APP_ERROR_CHECK(err_code);
-
-            if (p_evt->params.conn_sec_succeeded.procedure == PM_CONN_SEC_PROCEDURE_BONDING) {
-                err_code = pm_peer_rank_highest(p_evt->peer_id);
-                if (err_code != NRF_ERROR_BUSY) {
-                    APP_ERROR_CHECK(err_code);
-                }
-            }
             break;
 
         case PM_EVT_CONN_SEC_FAILED:
@@ -197,7 +186,7 @@ static void on_cts_c_evt(ble_cts_c_t * p_cts, ble_cts_c_evt_t * p_evt)
     switch (p_evt->evt_type) {
         case BLE_CTS_C_EVT_DISCOVERY_COMPLETE:
             NRF_LOG_INFO("Current Time Service discovered on server.");
-            err_code = ble_cts_c_handles_assign(&m_cts_c,
+            err_code = ble_cts_c_handles_assign(p_cts,
                                                 p_evt->conn_handle,
                                                 &p_evt->params.char_handles);
             APP_ERROR_CHECK(err_code);
@@ -232,7 +221,11 @@ static void on_cts_c_evt(ble_cts_c_t * p_cts, ble_cts_c_evt_t * p_evt)
                 p_evt->params.current_time.exact_time_256.day_date_time.date_time.seconds +
                     (p_evt->params.current_time.exact_time_256.fractions256 >= 128 ? 1 : 0)
             );
-            current_time_print(p_evt);
+            /*
+            err_code = sd_ble_gap_disconnect(p_cts->conn_handle,
+                                             BLE_HCI_REMOTE_USER_TERMINATED_CONNECTION);
+            APP_ERROR_CHECK(err_code);
+            */
             break;
 
         case BLE_CTS_C_EVT_INVALID_TIME:
@@ -546,7 +539,6 @@ static void advertising_init()
     init.advdata.uuids_solicited.uuid_cnt = sizeof(m_adv_uuids) / sizeof(m_adv_uuids[0]);
     init.advdata.uuids_solicited.p_uuids  = m_adv_uuids;
 
-    init.config.ble_adv_whitelist_enabled = false;
     init.config.ble_adv_on_disconnect_disabled = true;
     init.config.ble_adv_fast_enabled      = true;
     init.config.ble_adv_fast_interval     = APP_ADV_FAST_INTERVAL;
@@ -591,14 +583,16 @@ static void idle_state_handle(void)
     }
 }
 
-/*
 static void pwm_handler(nrfx_pwm_evt_type_t event_type)
 {
     if (event_type == NRFX_PWM_EVT_FINISHED) {
         struct tm *current_time = nrf_cal_get_time();
-        pwm_values[0] = (125 * current_time->tm_hour) / 3;
+        // tm_hour / 24 * PWM_TOP_VALUE = tm_hour * 600 / 9
+        // tm_min / (24 * 60) * PWM_TOP_VALUE = tm_min * 10 / 9
+        pwm_values[0] = (600 * current_time->tm_hour + 10 * current_time->tm_min) / 9;
     }
 }
+
 
 static void pwm_init(void)
 {
@@ -609,11 +603,12 @@ static void pwm_init(void)
             10,
             NRFX_PWM_PIN_NOT_USED,
             NRFX_PWM_PIN_NOT_USED,
-            NRFX_PWM_PIN_NOT_USED},
+            NRFX_PWM_PIN_NOT_USED
+        },
         .irq_priority = APP_IRQ_PRIORITY_LOWEST,
-        .base_clock = NRF_PWM_CLK_1MHz,
+        .base_clock = NRF_PWM_CLK_16MHz,
         .count_mode = NRF_PWM_MODE_UP,
-        .top_value = 1000,
+        .top_value = PWM_TOP_VALUE,
         .load_mode = NRF_PWM_LOAD_COMMON,
         .step_mode = NRF_PWM_STEP_AUTO
     };
@@ -627,14 +622,14 @@ static void pwm_init(void)
         .end_delay = 0
     };
 
-    err_code = nrfx_pwm_simple_playback(&pwm_inst, &seq, 1, NRFX_PWM_FLAG_LOOP);
+    err_code = nrfx_pwm_simple_playback(&pwm_inst, &seq, 10000, NRFX_PWM_FLAG_LOOP);
 }
-*/
+
 
 int main(void)
 {
-    nrf_cal_init();
     log_init();
+    nrf_cal_init();
     timers_init();
     buttons_leds_init();
     scheduler_init();
@@ -646,6 +641,7 @@ int main(void)
     peer_manager_init();
     services_init();
     conn_params_init();
+    pwm_init();
 
     for (;;) {
         idle_state_handle();
