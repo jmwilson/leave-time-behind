@@ -121,7 +121,9 @@ static void advertising_start(void)
     ret_code_t ret;
 
     ret = ble_advertising_start(&m_advertising, BLE_ADV_MODE_FAST);
-    APP_ERROR_CHECK(ret);
+    if (ret != NRF_ERROR_INVALID_STATE) {
+        APP_ERROR_CHECK(ret);
+    }
 }
 
 
@@ -443,12 +445,13 @@ void bsp_event_handler(bsp_event_t event)
 {
     switch (event) {
         case BSP_EVENT_KEY_0:
-            if (m_cts_c.conn_handle == BLE_CONN_HANDLE_INVALID
-                && m_advertising.adv_mode_current == BLE_ADV_MODE_IDLE)
-            {
+            NRF_LOG_INFO("%s", nrf_log_push(nrf_cal_get_time_string()));
+            break;
+
+        case BSP_EVENT_ADVERTISING_START:
+            if (m_cur_conn_handle == BLE_CONN_HANDLE_INVALID) {
                 advertising_start();
             }
-            NRF_LOG_INFO("%s", nrf_log_push(nrf_cal_get_time_string()));
             break;
 
         default:
@@ -490,6 +493,10 @@ static void buttons_leds_init(void)
     ret_code_t err_code;
 
     err_code = bsp_init(BSP_INIT_LEDS | BSP_INIT_BUTTONS, bsp_event_handler);
+    APP_ERROR_CHECK(err_code);
+
+    err_code = bsp_event_to_button_action_assign(
+        0, BSP_BUTTON_ACTION_LONG_PUSH, BSP_EVENT_ADVERTISING_START);
     APP_ERROR_CHECK(err_code);
 }
 
