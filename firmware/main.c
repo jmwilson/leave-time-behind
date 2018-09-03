@@ -99,9 +99,11 @@ static uint16_t     m_cur_conn_handle = BLE_CONN_HANDLE_INVALID;  // Handle of t
 
 static nrfx_pwm_t pwm_inst = NRFX_PWM_INSTANCE(0);
 static nrf_pwm_values_common_t pwm_values[] = {0};
-static const uint16_t PWM_TOP_VALUE = 1600;
+#define PWM_TOP_VALUE 1600  // At 16 MHz, this sets a PWM frequency of 10 kHz
 
 static ble_uuid_t m_adv_uuids[] = {{BLE_UUID_CURRENT_TIME_SERVICE, BLE_UUID_TYPE_BLE}};
+
+APP_TIMER_DEF(ble_disconnect_timer);
 
 
 /**
@@ -167,12 +169,23 @@ static void current_time_error_handler(uint32_t nrf_error)
 }
 
 
+static void ble_disconnect_timer_handler(void *p_context)
+{
+    ble_cts_c_t *cts = (ble_cts_c_t *)p_context;
+    (void)sd_ble_gap_disconnect(cts->conn_handle,
+                                BLE_HCI_REMOTE_USER_TERMINATED_CONNECTION);
+}
+
+
 static void timers_init(void)
 {
     ret_code_t err_code;
 
     err_code = app_timer_init();
     APP_ERROR_CHECK(err_code);
+
+    err_code = app_timer_create(&ble_disconnect_timer,
+        APP_TIMER_MODE_SINGLE_SHOT, ble_disconnect_timer_handler);
 }
 
 
@@ -192,7 +205,7 @@ static void on_cts_c_evt(ble_cts_c_t * p_cts, ble_cts_c_evt_t * p_evt)
                                                 p_evt->conn_handle,
                                                 &p_evt->params.char_handles);
             APP_ERROR_CHECK(err_code);
-            err_code = ble_cts_c_current_time_read(&m_cts_c);
+            err_code = ble_cts_c_current_time_read(p_cts);
             APP_ERROR_CHECK(err_code);
             break;
 
@@ -223,11 +236,7 @@ static void on_cts_c_evt(ble_cts_c_t * p_cts, ble_cts_c_evt_t * p_evt)
                 p_evt->params.current_time.exact_time_256.day_date_time.date_time.seconds +
                     (p_evt->params.current_time.exact_time_256.fractions256 >= 128 ? 1 : 0)
             );
-            /*
-            err_code = sd_ble_gap_disconnect(p_cts->conn_handle,
-                                             BLE_HCI_REMOTE_USER_TERMINATED_CONNECTION);
-            APP_ERROR_CHECK(err_code);
-            */
+            (void)app_timer_start(ble_disconnect_timer, APP_TIMER_TICKS(5000), (void *)p_cts);
             break;
 
         case BLE_CTS_C_EVT_INVALID_TIME:
@@ -629,6 +638,7 @@ static void pwm_init(void)
     };
 
     err_code = nrfx_pwm_simple_playback(&pwm_inst, &seq, 10000, NRFX_PWM_FLAG_LOOP);
+    APP_ERROR_CHECK(err_code);
 }
 
 
