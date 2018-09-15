@@ -46,9 +46,9 @@ void nrf_cal_init(void)
     err_code = nrfx_clock_init(clock_handler);
     if (err_code != NRFX_ERROR_ALREADY_INITIALIZED) {
         APP_ERROR_CHECK(err_code);
+        nrfx_clock_lfclk_start();
     }
-    nrfx_clock_lfclk_start();
-    while (!nrfx_clock_lfclk_is_running());
+    while (!nrfx_clock_lfclk_is_running()) {}
 
     nrfx_rtc_config_t config = NRFX_RTC_DEFAULT_CONFIG;
     config.prescaler = 4095;  // 8 Hz = 32 kHz / (prescaler + 1)

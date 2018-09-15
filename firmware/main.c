@@ -97,9 +97,11 @@ BLE_DB_DISCOVERY_DEF(m_ble_db_discovery);  // DB discovery module instance
 
 static uint16_t     m_cur_conn_handle = BLE_CONN_HANDLE_INVALID;  // Handle of the current connection
 
-static nrfx_pwm_t pwm_inst = NRFX_PWM_INSTANCE(0);
-static nrf_pwm_values_common_t pwm_values[] = {0};
+#define PWM_OUTPUT_PIN 15
+#define PWM_INVERT_OUTPUT ((uint16_t)0x8000)
 #define PWM_TOP_VALUE 1600  // At 16 MHz, this sets a PWM frequency of 10 kHz
+static nrfx_pwm_t pwm_inst = NRFX_PWM_INSTANCE(0);
+static nrf_pwm_values_common_t pwm_values[] = {PWM_INVERT_OUTPUT | 0};
 
 static ble_uuid_t m_adv_uuids[] = {{BLE_UUID_CURRENT_TIME_SERVICE, BLE_UUID_TYPE_BLE}};
 
@@ -604,7 +606,12 @@ static void pwm_handler(nrfx_pwm_evt_type_t event_type)
         struct tm *current_time = nrf_cal_get_time();
         // tm_hour / 24 * PWM_TOP_VALUE = tm_hour * 600 / 9
         // tm_min / (24 * 60) * PWM_TOP_VALUE = tm_min * 10 / 9
-        pwm_values[0] = (600 * current_time->tm_hour + 10 * current_time->tm_min) / 9;
+        // Set high bit to invert PWM:
+        // https://devzone.nordicsemi.com/f/nordic-q-a/28263/invert-pwm-behaviour
+        pwm_values[0] = PWM_INVERT_OUTPUT |
+                        ((600 * current_time->tm_hour +
+                          10 * current_time->tm_min) /
+                         9);
     }
 }
 
@@ -615,7 +622,7 @@ static void pwm_init(void)
 
     nrfx_pwm_config_t config = {
         .output_pins = {
-            10,
+            PWM_OUTPUT_PIN,
             NRFX_PWM_PIN_NOT_USED,
             NRFX_PWM_PIN_NOT_USED,
             NRFX_PWM_PIN_NOT_USED
@@ -645,7 +652,6 @@ static void pwm_init(void)
 int main(void)
 {
     log_init();
-    nrf_cal_init();
     timers_init();
     buttons_leds_init();
     scheduler_init();
@@ -657,6 +663,7 @@ int main(void)
     peer_manager_init();
     services_init();
     conn_params_init();
+    nrf_cal_init();
     pwm_init();
 
     for (;;) {
