@@ -1,0 +1,348 @@
+**********************************************************
+*** Library of Spice averaged switch models            ***
+*** Supplement to the textbook                         ***
+*** Fundamentals of Power Electronics                  ***
+*** by R.W.Erickson and D. Maksimovic                  ***
+*** Springer, 2001                                     ***
+*** Version: 3/05/16                                   ***
+*** Power Electronics Specialization                   ***
+*** @2016 University of Colorado Boulder               ***
+**********************************************************
+
+**********************************************************
+* MODEL: CCM1
+* Application: two-switch PWM converters
+* Limitations: ideal switches, CCM only, no transformer
+**********************************************************
+* Parameters: none
+**********************************************************
+* Nodes:
+* 1: transistor positive (drain of an n-channel MOS)
+* 2: transistor negative (source of an n-channel MOS)
+* 3: diode cathode
+* 4: diode anode
+* 5: duty cycle control input
+**********************************************************
+.subckt CCM1 1  2  3  4  5
+Et 1 2 value={(1-v(5))*v(3,4)/v(5)}
+Gd 4 3 value={(1-v(5))*i(Et)/v(5)}
+.ends
+**********************************************************
+
+**********************************************************
+* MODEL: CCM2
+* Application: two-switch PWM converters, includes
+*              conduction losses due to Ron, VD, Rd
+* Limitations: CCM only, no transformer
+**********************************************************
+* Parameters:
+*      Ron=transistor on resistance
+*      VD=diode forward voltage drop (constant)
+*      RD=diode on resistance
+**********************************************************
+* Nodes:
+* 1: transistor positive (drain of an n-channel MOS)
+* 2: transistor negative (source of an n-channel MOS)
+* 3: diode cathode
+* 4: diode anode
+* 5: duty cycle control input
+**********************************************************
+.subckt CCM2 1  2  3  4  5
++params: Ron=0 VD=0 RD=0
+Er 1 1x value={i(Et)*(Ron+(1-v(5))*RD/v(5))/v(5)}
+Et 1x 2 value={(1-v(5))*(v(3,4)+VD)/v(5)}
+Gd 4 3 value={(1-v(5))*i(Et)/v(5)}
+.ends
+**********************************************************
+
+**********************************************************
+* MODEL: CCM3
+* Application: two-switch PWM converters,
+*              with (possibly) transformer
+* Limitations: ideal switches, CCM only
+**********************************************************
+* Parameters:
+*     n=transformer turns ratio 1:n (primary:secondary)
+**********************************************************
+* Nodes:
+* 1: transistor positive (drain of an n-channel MOS)
+* 2: transistor negative (source of an n-channel MOS)
+* 3: diode cathode
+* 4: diode anode
+* 5: duty cycle control input
+**********************************************************
+.subckt CCM3 1  2  3  4  5
++params: n=1
+Et 1 2 value={(1-v(5))*v(3,4)/v(5)/n}
+Gd 4 3 value={(1-v(5))*i(Et)/v(5)/n}
+.ends
+**********************************************************
+
+
+**********************************************************
+* MODEL: CCM4
+* Application: two-switch PWM converters, includes
+*              conduction losses due to Ron, VD, RD
+*              and (possibly) transformer
+* Limitations: CCM only
+**********************************************************
+* Parameters:
+*      Ron=transistor on resistance
+*      VD=diode forward voltage drop (constant)
+*      Rd=diode on resistance
+*      n=transformer turns ratio 1:n (primary:secondary)
+**********************************************************
+* Nodes:
+* 1: transistor positive (drain of an n-channel MOS)
+* 2: transistor negative (source of an n-channel MOS)
+* 3: diode cathode
+* 4: diode anode
+* 5: duty cycle control input
+**********************************************************
+.subckt CCM4 1  2  3  4  5
++params: Ron=0 VD=0 RD=0 n=1
+Er 1 1x value={i(Et)*(Ron+(1-v(5))*RD/n/n/v(5))/v(5)}
+Et 1x 2 value={(1-v(5))*(v(3,4)+VD)/v(5)/n}
+Gd 4 3 value={(1-v(5))*i(Et)/v(5)/n}
+.ends
+**********************************************************
+
+**********************************************************
+* MODEL: CCM5
+* Application: two-switch PWM converters, includes
+*              conduction losses due to Ron, VD
+*              and diode reverse recovery losses
+* Limitations: CCM only, d'>tr/Ts, <i1> > Qr/Ts
+**********************************************************
+* Parameters:
+*      Ron=transistor on resistance
+*      VD=diode forward voltage drop (constant)
+*      Qr=diode reverse recovery charge
+*      tr=diode reverse recovery time
+*      fs=switching frequency
+**********************************************************
+* Nodes:
+* 1: transistor positive (drain of an n-channel MOS)
+* 2: transistor negative (source of an n-channel MOS)
+* 3: diode cathode
+* 4: diode anode
+* 5: duty cycle control input
+**********************************************************
+.subckt CCM5 1  2  3  4  5
++params: Ron=0 VD=0 Qr=0 tr=0 fs=1E5
+Er 1 1x value={(i(Et)-fs*Qr)*Ron/(v(5)+fs*tr)}
+Et 1x 2 value={(1-v(5))*(v(3,4)+VD)/v(5)}
+Gd 4 3 value={(1-v(5)-fs*tr)*i(Et)/(v(5)+fs*tr)-fs*Qr/(v(5)+fs*tr)}
+.ends
+**********************************************************
+
+
+**********************************************************
+* MODEL: CCM-DCM1
+* Application: two-switch PWM converters, CCM or DCM
+* Limitations: ideal switches, no transformer
+**********************************************************
+* Parameters:
+*      L=equivalent inductance for DCM
+*      fs=switching frequency
+**********************************************************
+* Nodes:
+* 1: transistor positive (drain of an n-channel MOS)
+* 2: transistor negative (source of an n-channel MOS)
+* 3: diode cathode
+* 4: diode anode
+* 5: duty cycle control input
+**********************************************************
+.subckt CCM-DCM1 1  2  3  4  5
++ params: L=100u fs=1E5
+Et 1 2 value={(1-v(u))*v(3,4)/v(u)}
+Gd 4 3 value={(1-v(u))*i(Et)/v(u)}
+** This Ga expression prohibits negative-current solutions
+Ga 0 a value={MAX(i(Et),0)}
+** In case of convergence problems, the alternative Ga
+** expression may work better:
+* Ga 0 a value={i(Et)}
+Va a b 0
+Ra b 0 10k
+Eu u 0 table {MAX(v(5),
++ v(5)*v(5)/(v(5)*v(5)+2*L*fs*i(Va)/v(3,4)))} (0 0) (1 1)
+.ends
+**********************************************************
+
+**********************************************************
+* MODEL: CCM-DCM2
+* Application: two-switch PWM converters, CCM or DCM
+*              with (possibly) transformer
+* Limitations: ideal switches
+**********************************************************
+* Parameters:
+*      L=equivalent inductance for DCM,
+*        referred to primary
+*      fs=switching frequency
+*      n=transformer turns ratio 1:n (primary:secondary)
+**********************************************************
+* Nodes:
+* 1: transistor positive (drain of an n-channel MOS)
+* 2: transistor negative (source of an n-channel MOS)
+* 3: diode cathode
+* 4: diode anode
+* 5: duty cycle control input
+**********************************************************
+.subckt CCM-DCM2 1  2  3  4  5
++params: L=100u fs=1E5 n=1
+Et 1 2 value={(1-v(u))*v(3,4)/v(u)/n}
+Gd 4 3 value={(1-v(u))*i(Et)/v(u)/n}
+** This Ga expression prohibits negative-current solutions:
+Ga 0 a value={MAX(i(Et),0)}
+** In case of convergence problems, the alternative Ga
+** expression may work better
+* Ga 0 a value={i(Et)}
+Va a b
+Ra b 0 10K
+Eu u 0 table {MAX(v(5),
++ v(5)*v(5)/(v(5)*v(5)+2*L*n*fs*i(Va)/v(3,4)))}(0 0) (1 1)
+.ends
+**********************************************************
+
+
+**********************************************************
+* MODEL: CPM
+* Current-Programmed-Mode controller model.
+* Computes duty ratio based on averaged inductor
+* current, voltages applied to the inductor, and amplitude
+* of the artificial ramp. The CPM controller model
+* is valid for CCM and DCM operation of the power
+* converter. All parameters and inputs are referred to
+* the primary side.
+*
+* Limitation: does not include sampling effects
+* or preditions of period-doubling instability
+*
+**********************************************************
+* Parameters:
+*     L=equivalent inductance, referred to primary
+*     fs=switching frequency
+*     Va=amplitude of the artificial ramp, Va=Rf*ma/fs
+*     Rf=equivalent current-sense resistance
+**********************************************************
+* Nodes:
+* vc: control input, vc=Rf*ic
+* vs: sensed average inductor current vs=Rf*iL
+* vm1: voltage across L in interval 1, slope m1=vm1/L
+* vm2: (-) voltage across L in interval 2, slope m2=vm2/L
+* d: duty cycle (output of the CPM controller)
+**********************************************************
+.subckt CPM vc vs vm1 vm2 d
++params: L=100e-6 fs=1e5 Va=0.5 Rf=1
+*
+* generate d2 for CCM or DCM, see Eq.(B.31)
+Ed2 d2 0 table
++ {MIN(
++ L*fs*(v(vc)-Va*v(d))/Rf/(v(vm2)),
++ 1-v(d)
++ )} (0,0) (1,1)
+*
+* generate inductor current slopes, see Eqs.(B.24) and (B.26)
+Em1 m1 0 value={Rf*v(vm1)/L/fs}
+Em2 m2 0 value={Rf*v(vm2)/L/fs}
+*
+* compute duty cycle d, this is a replacement for Eq.(B.32)
+Eduty d 0 table
++ {
++ 2*(v(vc)*(v(d)+v(d2))-v(vs))
++ /((v(m1)+v(m2))*v(d2)*(v(d)+v(d2)) + 2*Va*(v(d)+v(d2)))
++ } (0.01,0.01) (0.99,0.99)
+*
+.ends ; end of subcircuit CPM
+**********************************************************
+
+**********************************************************
+* MODEL: CPM-CCM
+* Current-Programmed-Mode controller model.
+* Computes duty ratio based on averaged inductor
+* current, voltages applied to the inductor, and amplitude
+* of the artificial ramp. This CPM controller model
+* is valid only for CCM  operation of the power
+* converter. All parameters and inputs are referred to
+* the primary side.
+*
+* Limitation: does not include sampling effects
+* or preditions of period-doubling instability
+*
+**********************************************************
+* Parameters:
+*     L=equivalent inductance, referred to primary
+*     fs=switching frequency
+*     Va=amplitude of the artificial ramp, Va=Rf*ma/fs
+*     Rf=equivalent current-sense resistance
+**********************************************************
+* Nodes:
+* vc: control input, vc=Rf*ic
+* vs: sensed average inductor current vs=Rf*iL
+* vm1: voltage across L in interval 1, slope m1=vm1/L
+* vm2: (-) voltage across L in interval 2, slope m2=vm2/L
+* d: duty cycle (output of the CPM controller)
+**********************************************************
+.subckt CPM-CCM vc vs vm1 vm2 d
++params: L=100e-6 fs=1e5 Va=0.5 Rf=1
+*
+* generate inductor current slopes, see Eqs.(B.24) and (B.26)
+Em1 m1 0 value={Rf*v(vm1)/L/fs}
+Em2 m2 0 value={Rf*v(vm2)/L/fs}
+*
+* compute duty cycle d, this is a replacement for Eq.(B.32)
+* and it is valid only for CCM, d2 = 1-d
+Eduty d 0 table
++ {
++ 2*(v(vc)-v(vs))
++ /((v(m1)+v(m2))*(1-v(d)) + 2*Va)
++ } (0.01,0.01) (0.99,0.99)
+*
+.ends ; end of subcircuit CPM
+**********************************************************
+
+**********************************************************
+* MODEL: transformer
+* Application: transformer model suitable for averaged
+*              circuit models
+* Limitations: no losses, no leakages, two windings
+**********************************************************
+* Parameters:
+*      Lm=primary (magnetizing) inductance
+*      n=transformer turns ratio 1:n (primary:secondary)
+**********************************************************
+* Nodes:
+* 1: primary-dot
+* 2: primary-undot
+* 3: secondary-dot
+* 4: secondary-undot
+**********************************************************
+.subckt transformer 1  2  3  4
++params: Lm=100u n=1
+Lm 1 2 {Lm}
+Gp 2 1 value={n*i(Es)}
+Es 3 4 value={n*v(1,2)}
+.ends
+**********************************************************
+
+
+**********************************************************
+* MODEL: idealtran
+* Application: ideal transformer
+* Limitations: two windings
+**********************************************************
+* Parameters:
+*      n=transformer turns ratio 1:n (primary:secondary)
+**********************************************************
+* Nodes:
+* 1: primary-dot
+* 2: primary-undot
+* 3: secondary-dot
+* 4: secondary-undot
+**********************************************************
+.subckt idealtran 1  2  3  4
++params: n=1
+Gp 2 1 value={n*i(Es)}
+Es 3 4 value={n*v(1,2)}
+.ends
+**********************************************************
