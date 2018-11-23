@@ -55,23 +55,6 @@ GenerateClassCluster=0
 DocumentUniqueId=EWSLAMQY
 
 [Document2]
-DocumentPath=..\NixiePowerUSB\NixiePowerUSB.SchDoc
-AnnotationEnabled=1
-AnnotateStartValue=1
-AnnotationIndexControlEnabled=0
-AnnotateSuffix=
-AnnotateScope=All
-AnnotateOrder=3
-DoLibraryUpdate=1
-DoDatabaseUpdate=1
-ClassGenCCAutoEnabled=1
-ClassGenCCAutoRoomEnabled=0
-ClassGenNCAutoScope=None
-DItemRevisionGUID=
-GenerateClassCluster=0
-DocumentUniqueId=EKFAOPEX
-
-[Document3]
 DocumentPath=MCU.SchDoc
 AnnotationEnabled=1
 AnnotateStartValue=1
@@ -88,7 +71,7 @@ DItemRevisionGUID=
 GenerateClassCluster=0
 DocumentUniqueId=RXLBLHWX
 
-[Document4]
+[Document3]
 DocumentPath=Board connectors.SchDoc
 AnnotationEnabled=1
 AnnotateStartValue=1
@@ -105,7 +88,7 @@ DItemRevisionGUID=
 GenerateClassCluster=0
 DocumentUniqueId=RUSHHTMR
 
-[Document5]
+[Document4]
 DocumentPath=Board.PcbDoc
 AnnotationEnabled=1
 AnnotateStartValue=1
@@ -122,7 +105,7 @@ DItemRevisionGUID=
 GenerateClassCluster=0
 DocumentUniqueId=XKKNLDJF
 
-[Document6]
+[Document5]
 DocumentPath=Grounded clock.IntLib
 AnnotationEnabled=1
 AnnotateStartValue=1
@@ -139,7 +122,7 @@ DItemRevisionGUID=
 GenerateClassCluster=0
 DocumentUniqueId=
 
-[Document7]
+[Document6]
 DocumentPath=Outputs.OutJob
 AnnotationEnabled=1
 AnnotateStartValue=1
@@ -156,13 +139,32 @@ DItemRevisionGUID=
 GenerateClassCluster=0
 DocumentUniqueId=
 
+[Document7]
+DocumentPath=Power supply.SchDoc
+AnnotationEnabled=1
+AnnotateStartValue=1
+AnnotationIndexControlEnabled=0
+AnnotateSuffix=
+AnnotateScope=All
+AnnotateOrder=3
+DoLibraryUpdate=1
+DoDatabaseUpdate=1
+ClassGenCCAutoEnabled=1
+ClassGenCCAutoRoomEnabled=0
+ClassGenNCAutoScope=None
+DItemRevisionGUID=
+GenerateClassCluster=0
+DocumentUniqueId=EKFAOPEX
+
 [ProjectVariant1]
 UniqueID=61727900-3DBB-4991-AF85-F5256F7ACDD3
 Description=Only placed components + no slope comp
 AllowFabrication=0
 ParameterCount=0
-VariationCount=1
+VariationCount=3
 Variation1=Designator=C8|UniqueId=\MYMJWOID|Kind=1|AlternatePart= 
+Variation2=Designator=C12|UniqueId=\DWKLLSAE|Kind=1|AlternatePart= 
+Variation3=Designator=R9|UniqueId=\LADFMNUG|Kind=1|AlternatePart= 
 ParamVariationCount=0
 
 [GeneratedDocument1]
