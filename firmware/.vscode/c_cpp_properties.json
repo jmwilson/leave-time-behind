@@ -1,12 +1,11 @@
 {
     "env": {
-        "nrf.sdk": "/Users/james/nrf5/nRF5_SDK_15.0.0_a53641a"
     },
     "configurations": [
         {
             "name": "nrf52832",
             "defines": [
-                "BOARD_SPARKFUN",
+                "BOARD_CUSTOM",
                 "CONFIG_GPIO_AS_PINRESET",
                 "FLOAT_ABI_HARD",
                 "NRF52",
@@ -17,31 +16,31 @@
                 "SOFTDEVICE_PRESENT",
                 "SWI_DISABLE0"
             ],
-            "compilerPath": "/usr/local/gcc-arm-none-eabi-7-2018-q2-update/bin/arm-none-eabi-gcc -mcpu=cortex-m4 -mthumb -mabi=aapcs -mfloat-abi=hard -mfpu=fpv4-sp-d16",
+            "compilerPath": "C:/Program Files (x86)/GNU Tools ARM Embedded/7 2017-q4-major/bin/arm-none-eabi-gcc.exe -mcpu=cortex-m4 -mthumb -mabi=aapcs -mfloat-abi=hard -mfpu=fpv4-sp-d16",
             "cStandard": "c99",
             "cppStandard": "c++17",
             "intelliSenseMode": "gcc-x64",
             "includePath": [
                 "${workspaceFolder}/sparkfun/s132/config",
-                "${env:nrf.sdk}/components/ble/**",
-                "${env:nrf.sdk}/components/boards",
-                "${env:nrf.sdk}/components/drivers_ext/**",
-                "${env:nrf.sdk}/components/iot/**",
-                "${env:nrf.sdk}/components/libraries/**",
-                "${env:nrf.sdk}/components/nfc/**",
-                "${env:nrf.sdk}/components/proprietary_rf/**",
-                "${env:nrf.sdk}/components/serialization/**",
-                "${env:nrf.sdk}/components/softdevice/common",
-                "${env:nrf.sdk}/components/softdevice/mbr/nrf52832",
-                "${env:nrf.sdk}/components/softdevice/s132/headers",
-                "${env:nrf.sdk}/components/toolchain/cmsis/include",
-                "${env:nrf.sdk}/integration/nrfx",
-                "${env:nrf.sdk}/integration/nrfx/legacy",
-                "${env:nrf.sdk}/modules/nrfx/drivers/include",
-                "${env:nrf.sdk}/modules/nrfx",
-                "${env:nrf.sdk}/modules/nrfx/hal",
-                "${env:nrf.sdk}/modules/nrfx/mdk",
-                "${env:nrf.sdk}/modules/nrfx/soc"
+                "${env:NRF_SDK_ROOT}/components/ble/**",
+                "${env:NRF_SDK_ROOT}/components/boards",
+                "${env:NRF_SDK_ROOT}/components/drivers_ext/**",
+                "${env:NRF_SDK_ROOT}/components/iot/**",
+                "${env:NRF_SDK_ROOT}/components/libraries/**",
+                "${env:NRF_SDK_ROOT}/components/nfc/**",
+                "${env:NRF_SDK_ROOT}/components/proprietary_rf/**",
+                "${env:NRF_SDK_ROOT}/components/serialization/**",
+                "${env:NRF_SDK_ROOT}/components/softdevice/common",
+                "${env:NRF_SDK_ROOT}/components/softdevice/mbr/nrf52832",
+                "${env:NRF_SDK_ROOT}/components/softdevice/s132/headers",
+                "${env:NRF_SDK_ROOT}/components/toolchain/cmsis/include",
+                "${env:NRF_SDK_ROOT}/integration/nrfx",
+                "${env:NRF_SDK_ROOT}/integration/nrfx/legacy",
+                "${env:NRF_SDK_ROOT}/modules/nrfx/drivers/include",
+                "${env:NRF_SDK_ROOT}/modules/nrfx",
+                "${env:NRF_SDK_ROOT}/modules/nrfx/hal",
+                "${env:NRF_SDK_ROOT}/modules/nrfx/mdk",
+                "${env:NRF_SDK_ROOT}/modules/nrfx/soc"
             ]
         }
     ],
