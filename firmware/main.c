@@ -36,6 +36,7 @@
 #include "nrf_sdh.h"
 #include "nrf_sdh_soc.h"
 #include "nrf_sdh_ble.h"
+#include "nrfx_gpiote.h"
 #include "nrfx_pwm.h"
 #include "ble_conn_state.h"
 #include "nrf_ble_gatt.h"
@@ -95,6 +96,7 @@ NRF_BLE_QWR_DEF(m_qwr);  // Context for the Queued Write module
 BLE_ADVERTISING_DEF(m_advertising);  // Advertising module instance
 BLE_DB_DISCOVERY_DEF(m_ble_db_discovery);  // DB discovery module instance
 
+static bool         m_pwr_en = false;  // Power state, true = on USB power, false = on backup battery
 static uint16_t     m_cur_conn_handle = BLE_CONN_HANDLE_INVALID;  // Handle of the current connection
 
 #define PWM_OUTPUT_PIN 15
@@ -394,28 +396,27 @@ static void ble_evt_handler(ble_evt_t const * p_ble_evt, void * p_context)
     switch (p_ble_evt->header.evt_id) {
         case BLE_GAP_EVT_CONNECTED:
             NRF_LOG_INFO("Connected.");
-            err_code = bsp_indication_set(BSP_INDICATE_CONNECTED);
-            APP_ERROR_CHECK(err_code);
             m_cur_conn_handle = p_ble_evt->evt.gap_evt.conn_handle;
             err_code = nrf_ble_qwr_conn_handle_assign(&m_qwr, m_cur_conn_handle);
             APP_ERROR_CHECK(err_code);
-
             err_code = pm_conn_sec_status_get(m_cur_conn_handle, &status);
             APP_ERROR_CHECK(err_code);
             if (!status.encrypted) {
                 err_code = pm_conn_secure(m_cur_conn_handle, false);
                 APP_ERROR_CHECK(err_code);
             }
+            err_code = bsp_indication_set(BSP_INDICATE_CONNECTED);
+            APP_ERROR_CHECK(err_code);
             break;
 
         case BLE_GAP_EVT_DISCONNECTED:
             NRF_LOG_INFO("Disconnected.");
-            err_code = bsp_indication_set(BSP_INDICATE_IDLE);
-            APP_ERROR_CHECK(err_code);
             m_cur_conn_handle = BLE_CONN_HANDLE_INVALID;
             if (p_ble_evt->evt.gap_evt.conn_handle == m_cts_c.conn_handle) {
                 m_cts_c.conn_handle = BLE_CONN_HANDLE_INVALID;
             }
+            err_code = bsp_indication_set(BSP_INDICATE_IDLE);
+            APP_ERROR_CHECK(err_code);
             break;
 
         case BLE_GAP_EVT_PHY_UPDATE_REQUEST:
@@ -459,7 +460,7 @@ void bsp_event_handler(bsp_event_t event)
             break;
 
         case BSP_EVENT_ADVERTISING_START:
-            if (m_cur_conn_handle == BLE_CONN_HANDLE_INVALID) {
+            if (m_cur_conn_handle == BLE_CONN_HANDLE_INVALID && m_pwr_en) {
                 advertising_start();
             }
             break;
@@ -616,6 +617,19 @@ static void pwm_handler(nrfx_pwm_evt_type_t event_type)
 }
 
 
+static void pwm_start(void)
+{
+    nrf_pwm_sequence_t const seq = {
+        .values.p_common = pwm_values,
+        .length = NRF_PWM_VALUES_LENGTH(pwm_values),
+        .repeats = 0,
+        .end_delay = 0
+    };
+
+    APP_ERROR_CHECK(nrfx_pwm_simple_playback(&pwm_inst, &seq, 10000, NRFX_PWM_FLAG_LOOP));
+}
+
+
 static void pwm_init(void)
 {
     ret_code_t err_code;
@@ -636,16 +650,74 @@ static void pwm_init(void)
     };
     err_code = nrfx_pwm_init(&pwm_inst, &config, pwm_handler);
     APP_ERROR_CHECK(err_code);
+}
 
-    nrf_pwm_sequence_t const seq = {
-        .values.p_common = pwm_values,
-        .length = NRF_PWM_VALUES_LENGTH(pwm_values),
-        .repeats = 0,
-        .end_delay = 0
-    };
 
-    err_code = nrfx_pwm_simple_playback(&pwm_inst, &seq, 10000, NRFX_PWM_FLAG_LOOP);
-    APP_ERROR_CHECK(err_code);
+uint32_t set_power_enable_state(void)
+{
+    uint32_t chg_al_n = nrf_gpio_pin_read(CHG_AL_N);
+    uint32_t chg_det = nrf_gpio_pin_read(CHG_DET);
+    uint32_t pwr_stat = nrf_gpio_pin_read(PWR_STAT);
+    m_pwr_en = !chg_al_n && chg_det && !pwr_stat;
+
+    NRF_LOG_INFO(
+        "Power state change: CHG_AL_N = %d, CHG_DET = %d, "
+        "PWR_STAT = %d, PWR_EN = %d",
+        chg_al_n,
+        chg_det,
+        pwr_stat,
+        m_pwr_en
+    );
+    nrf_gpio_pin_write(PWR_EN, m_pwr_en);
+
+    return m_pwr_en;
+}
+
+
+static void power_gpiote_event_handler(nrfx_gpiote_pin_t pin, nrf_gpiote_polarity_t action)
+{
+    ret_code_t   err_code;
+
+    (void)set_power_enable_state();
+    if (m_pwr_en) {
+        pwm_start();
+    } else {
+        (void)nrfx_pwm_stop(&pwm_inst, false);
+        (void)bsp_indication_set(BSP_INDICATE_IDLE);
+        if (m_cur_conn_handle != BLE_CONN_HANDLE_INVALID) {
+            (void)sd_ble_gap_disconnect(m_cur_conn_handle,
+                BLE_HCI_REMOTE_USER_TERMINATED_CONNECTION);
+        }
+        err_code = sd_ble_gap_adv_stop(m_advertising.adv_handle);
+        if (err_code != NRF_ERROR_INVALID_STATE
+            && err_code != BLE_ERROR_INVALID_ADV_HANDLE) {
+            APP_ERROR_CHECK(err_code);
+        }
+    }
+}
+
+
+static void gpio_init(void)
+{
+    nrfx_gpiote_in_config_t config = NRFX_GPIOTE_CONFIG_IN_SENSE_TOGGLE(/* hi_accu = */ false);
+
+    nrf_gpio_cfg_output(PWR_EN);
+
+    config.pull = CHG_DET_PULL;
+    APP_ERROR_CHECK(nrfx_gpiote_in_init(CHG_DET, &config, power_gpiote_event_handler));
+    config.pull = CHG_AL_N_PULL;
+    APP_ERROR_CHECK(nrfx_gpiote_in_init(CHG_AL_N, &config, power_gpiote_event_handler));
+    config.pull = PWR_STAT_PULL;
+    APP_ERROR_CHECK(nrfx_gpiote_in_init(PWR_STAT, &config, power_gpiote_event_handler));
+
+    (void)set_power_enable_state();
+    if (m_pwr_en) {
+        pwm_start();
+    }
+
+    nrfx_gpiote_in_event_enable(CHG_AL_N, true);
+    nrfx_gpiote_in_event_enable(CHG_DET, true);
+    nrfx_gpiote_in_event_enable(PWR_STAT, true);
 }
 
 
@@ -665,6 +737,7 @@ int main(void)
     conn_params_init();
     nrf_cal_init();
     pwm_init();
+    gpio_init();
 
     for (;;) {
         idle_state_handle();

@@ -35,6 +35,15 @@ extern "C" {
 
 #define BSP_BUTTON_0   BUTTON_1
 
+#define CHG_AL_N       4
+#define CHG_AL_N_PULL  NRF_GPIO_PIN_PULLUP
+#define CHG_DET        5
+#define CHG_DET_PULL   NRF_GPIO_PIN_NOPULL
+#define TIME_PWM       15
+#define PWR_STAT       16
+#define PWR_STAT_PULL  NRF_GPIO_PIN_PULLUP
+#define PWR_EN         17
+
 #define RX_PIN_NUMBER  26
 #define TX_PIN_NUMBER  27
 #define CTS_PIN_NUMBER UART_PIN_DISCONNECTED

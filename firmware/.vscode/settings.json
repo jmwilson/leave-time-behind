@@ -1,5 +1,4 @@
 {
     "C_Cpp.autoAddFileAssociations": false,
-    "C_Cpp.intelliSenseEngineFallback": "Disabled",
-    "C_Cpp.errorSquiggles": "Disabled",
+    "C_Cpp.intelliSenseEngine": "Tag Parser",
 }
