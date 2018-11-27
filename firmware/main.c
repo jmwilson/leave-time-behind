@@ -456,7 +456,7 @@ void bsp_event_handler(bsp_event_t event)
 {
     switch (event) {
         case BSP_EVENT_KEY_0:
-            NRF_LOG_INFO("%s", nrf_log_push(nrf_cal_get_time_string()));
+            NRF_LOG_INFO("Current time: %s", nrf_log_push(nrf_cal_get_time_string()));
             break;
 
         case BSP_EVENT_ADVERTISING_START:
@@ -626,14 +626,13 @@ static void pwm_start(void)
         .end_delay = 0
     };
 
-    APP_ERROR_CHECK(nrfx_pwm_simple_playback(&pwm_inst, &seq, 10000, NRFX_PWM_FLAG_LOOP));
+    APP_ERROR_CHECK(nrfx_pwm_simple_playback(
+        &pwm_inst, &seq, 10000, NRFX_PWM_FLAG_LOOP));
 }
 
 
 static void pwm_init(void)
 {
-    ret_code_t err_code;
-
     nrfx_pwm_config_t config = {
         .output_pins = {
             PWM_OUTPUT_PIN,
@@ -648,8 +647,7 @@ static void pwm_init(void)
         .load_mode = NRF_PWM_LOAD_COMMON,
         .step_mode = NRF_PWM_STEP_AUTO
     };
-    err_code = nrfx_pwm_init(&pwm_inst, &config, pwm_handler);
-    APP_ERROR_CHECK(err_code);
+    APP_ERROR_CHECK(nrfx_pwm_init(&pwm_inst, &config, pwm_handler));
 }
 
 
@@ -674,12 +672,9 @@ uint32_t set_power_enable_state(void)
 }
 
 
-static void power_gpiote_event_handler(nrfx_gpiote_pin_t pin, nrf_gpiote_polarity_t action)
+static void gpiote_event_handler(nrfx_gpiote_pin_t pin, nrf_gpiote_polarity_t action)
 {
-    ret_code_t   err_code;
-
-    (void)set_power_enable_state();
-    if (m_pwr_en) {
+    if (set_power_enable_state()) {
         pwm_start();
     } else {
         (void)nrfx_pwm_stop(&pwm_inst, false);
@@ -688,30 +683,35 @@ static void power_gpiote_event_handler(nrfx_gpiote_pin_t pin, nrf_gpiote_polarit
             (void)sd_ble_gap_disconnect(m_cur_conn_handle,
                 BLE_HCI_REMOTE_USER_TERMINATED_CONNECTION);
         }
-        err_code = sd_ble_gap_adv_stop(m_advertising.adv_handle);
-        if (err_code != NRF_ERROR_INVALID_STATE
-            && err_code != BLE_ERROR_INVALID_ADV_HANDLE) {
-            APP_ERROR_CHECK(err_code);
-        }
+        (void)sd_ble_gap_adv_stop(m_advertising.adv_handle);
     }
 }
 
 
 static void gpio_init(void)
 {
-    nrfx_gpiote_in_config_t config = NRFX_GPIOTE_CONFIG_IN_SENSE_TOGGLE(/* hi_accu = */ false);
+    nrfx_err_t err_code;
+    nrfx_gpiote_in_config_t config =
+        NRFX_GPIOTE_CONFIG_IN_SENSE_TOGGLE(/* hi_accu = */ false);
+
+    err_code = nrfx_gpiote_init();
+    if (err_code != NRFX_ERROR_INVALID_STATE) {
+        APP_ERROR_CHECK(err_code);
+    }
 
     nrf_gpio_cfg_output(PWR_EN);
 
     config.pull = CHG_DET_PULL;
-    APP_ERROR_CHECK(nrfx_gpiote_in_init(CHG_DET, &config, power_gpiote_event_handler));
+    APP_ERROR_CHECK(nrfx_gpiote_in_init(
+        CHG_DET, &config, gpiote_event_handler));
     config.pull = CHG_AL_N_PULL;
-    APP_ERROR_CHECK(nrfx_gpiote_in_init(CHG_AL_N, &config, power_gpiote_event_handler));
+    APP_ERROR_CHECK(nrfx_gpiote_in_init(
+        CHG_AL_N, &config, gpiote_event_handler));
     config.pull = PWR_STAT_PULL;
-    APP_ERROR_CHECK(nrfx_gpiote_in_init(PWR_STAT, &config, power_gpiote_event_handler));
+    APP_ERROR_CHECK(nrfx_gpiote_in_init(
+        PWR_STAT, &config, gpiote_event_handler));
 
-    (void)set_power_enable_state();
-    if (m_pwr_en) {
+    if (set_power_enable_state()) {
         pwm_start();
     }
 

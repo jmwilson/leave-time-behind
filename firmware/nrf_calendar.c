@@ -89,6 +89,6 @@ struct tm *nrf_cal_get_time(void)
 char *nrf_cal_get_time_string(void)
 {
     static char cal_string[80];
-    strftime(cal_string, 80, "%x - %H:%M:%S", nrf_cal_get_time());
+    strftime(cal_string, 80, "%F %T", nrf_cal_get_time());
     return cal_string;
 }
