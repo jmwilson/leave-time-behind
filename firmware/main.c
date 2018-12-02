@@ -49,7 +49,7 @@
 #include "nrf_calendar.h"
 
 
-#define DEVICE_NAME                     "Nixie Clock"
+#define DEVICE_NAME                     "Leave Time Behind"
 
 #define APP_BLE_OBSERVER_PRIO           3
 #define APP_BLE_CONN_CFG_TAG            1  // A tag identifying the SoftDevice BLE configuration
@@ -99,7 +99,6 @@ BLE_DB_DISCOVERY_DEF(m_ble_db_discovery);  // DB discovery module instance
 static bool         m_pwr_en = false;  // Power state, true = on USB power, false = on backup battery
 static uint16_t     m_cur_conn_handle = BLE_CONN_HANDLE_INVALID;  // Handle of the current connection
 
-#define PWM_OUTPUT_PIN 15
 #define PWM_INVERT_OUTPUT ((uint16_t)0x8000)
 #define PWM_TOP_VALUE 1600  // At 16 MHz, this sets a PWM frequency of 10 kHz
 static nrfx_pwm_t pwm_inst = NRFX_PWM_INSTANCE(0);
@@ -190,6 +189,7 @@ static void timers_init(void)
 
     err_code = app_timer_create(&ble_disconnect_timer,
         APP_TIMER_MODE_SINGLE_SHOT, ble_disconnect_timer_handler);
+    APP_ERROR_CHECK(err_code);
 }
 
 
@@ -470,6 +470,7 @@ void bsp_event_handler(bsp_event_t event)
     }
 }
 
+NRF_SDH_BLE_OBSERVER(m_ble_observer, APP_BLE_OBSERVER_PRIO, ble_evt_handler, NULL);
 
 static void ble_stack_init(void)
 {
@@ -487,9 +488,6 @@ static void ble_stack_init(void)
     // Enable BLE stack.
     err_code = nrf_sdh_ble_enable(&ram_start);
     APP_ERROR_CHECK(err_code);
-
-    // Register a handler for BLE events.
-    NRF_SDH_BLE_OBSERVER(m_ble_observer, APP_BLE_OBSERVER_PRIO, ble_evt_handler, NULL);
 }
 
 
@@ -626,16 +624,17 @@ static void pwm_start(void)
         .end_delay = 0
     };
 
-    APP_ERROR_CHECK(nrfx_pwm_simple_playback(
-        &pwm_inst, &seq, 10000, NRFX_PWM_FLAG_LOOP));
+    (void)nrfx_pwm_simple_playback(
+        &pwm_inst, &seq, 10000, NRFX_PWM_FLAG_LOOP);
 }
 
 
 static void pwm_init(void)
 {
+    nrfx_err_t err_code;
     nrfx_pwm_config_t config = {
         .output_pins = {
-            PWM_OUTPUT_PIN,
+            TIME_PWM,
             NRFX_PWM_PIN_NOT_USED,
             NRFX_PWM_PIN_NOT_USED,
             NRFX_PWM_PIN_NOT_USED
@@ -647,11 +646,13 @@ static void pwm_init(void)
         .load_mode = NRF_PWM_LOAD_COMMON,
         .step_mode = NRF_PWM_STEP_AUTO
     };
-    APP_ERROR_CHECK(nrfx_pwm_init(&pwm_inst, &config, pwm_handler));
+
+    err_code = nrfx_pwm_init(&pwm_inst, &config, pwm_handler);
+    APP_ERROR_CHECK(err_code);
 }
 
 
-uint32_t set_power_enable_state(void)
+static uint32_t set_power_enable_state(void)
 {
     uint32_t chg_al_n = nrf_gpio_pin_read(CHG_AL_N);
     uint32_t chg_det = nrf_gpio_pin_read(CHG_DET);
@@ -702,14 +703,19 @@ static void gpio_init(void)
     nrf_gpio_cfg_output(PWR_EN);
 
     config.pull = CHG_DET_PULL;
-    APP_ERROR_CHECK(nrfx_gpiote_in_init(
-        CHG_DET, &config, gpiote_event_handler));
+    err_code = nrfx_gpiote_in_init(
+        CHG_DET, &config, gpiote_event_handler);
+    APP_ERROR_CHECK(err_code);
+
     config.pull = CHG_AL_N_PULL;
-    APP_ERROR_CHECK(nrfx_gpiote_in_init(
-        CHG_AL_N, &config, gpiote_event_handler));
+    err_code = nrfx_gpiote_in_init(
+        CHG_AL_N, &config, gpiote_event_handler);
+    APP_ERROR_CHECK(err_code);
+
     config.pull = PWR_STAT_PULL;
-    APP_ERROR_CHECK(nrfx_gpiote_in_init(
-        PWR_STAT, &config, gpiote_event_handler));
+    err_code = nrfx_gpiote_in_init(
+        PWR_STAT, &config, gpiote_event_handler);
+    APP_ERROR_CHECK(err_code);
 
     if (set_power_enable_state()) {
         pwm_start();

@@ -27,7 +27,7 @@
 static time_t m_time;
 static nrfx_rtc_t rtc_inst = NRFX_RTC_INSTANCE(2);
 
-void cal_rtc_handler(nrfx_rtc_int_type_t int_type)
+static void cal_rtc_handler(nrfx_rtc_int_type_t int_type)
 {
     if (int_type == NRFX_RTC_INT_COMPARE0) {
         nrfx_rtc_counter_clear(&rtc_inst);
@@ -35,7 +35,7 @@ void cal_rtc_handler(nrfx_rtc_int_type_t int_type)
     }
 }
 
-void clock_handler(nrfx_clock_evt_type_t event)
+static void clock_handler(nrfx_clock_evt_type_t event)
 {
 }
 
