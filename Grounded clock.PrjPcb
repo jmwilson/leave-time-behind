@@ -161,10 +161,9 @@ UniqueID=61727900-3DBB-4991-AF85-F5256F7ACDD3
 Description=Only placed components + no slope comp
 AllowFabrication=0
 ParameterCount=0
-VariationCount=3
+VariationCount=2
 Variation1=Designator=C8|UniqueId=\MYMJWOID|Kind=1|AlternatePart= 
-Variation2=Designator=C12|UniqueId=\DWKLLSAE|Kind=1|AlternatePart= 
-Variation3=Designator=R9|UniqueId=\LADFMNUG|Kind=1|AlternatePart= 
+Variation2=Designator=C5|UniqueId=\GMAYRBPD|Kind=1|AlternatePart= 
 ParamVariationCount=0
 
 [GeneratedDocument1]
