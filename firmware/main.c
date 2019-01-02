@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2018 James Wilson
+ * Copyright (c) 2018-2019 James Wilson
  * All rights reserved.
  *
  * This program is free software: you can redistribute it and/or modify
@@ -101,6 +101,7 @@ static uint16_t     m_cur_conn_handle = BLE_CONN_HANDLE_INVALID;  // Handle of t
 
 #define PWM_INVERT_OUTPUT ((uint16_t)0x8000)
 #define PWM_TOP_VALUE 1600  // At 16 MHz, this sets a PWM frequency of 10 kHz
+#define PWM_BASE_VALUE 160  // Beginning of the working section is about 10% of the max current
 static nrfx_pwm_t pwm_inst = NRFX_PWM_INSTANCE(0);
 static nrf_pwm_values_common_t pwm_values[] = {PWM_INVERT_OUTPUT | 0};
 
@@ -603,14 +604,13 @@ static void pwm_handler(nrfx_pwm_evt_type_t event_type)
 {
     if (event_type == NRFX_PWM_EVT_FINISHED) {
         struct tm *current_time = nrf_cal_get_time();
-        // tm_hour / 24 * PWM_TOP_VALUE = tm_hour * 600 / 9
-        // tm_min / (24 * 60) * PWM_TOP_VALUE = tm_min * 10 / 9
+        // tm_hour / 24 * (PWM_TOP_VALUE - PWM_BASE_VALUE) = tm_hour * 60
+        // tm_min / (24 * 60) * (PWM_TOP_VALUE - PWM_BASE_VALUE) = tm_min
         // Set high bit to invert PWM:
         // https://devzone.nordicsemi.com/f/nordic-q-a/28263/invert-pwm-behaviour
         pwm_values[0] = PWM_INVERT_OUTPUT |
-                        ((600 * current_time->tm_hour +
-                          10 * current_time->tm_min) /
-                         9);
+                        (PWM_BASE_VALUE + current_time->tm_hour * 60
+                         + current_time->tm_min);
     }
 }
 
