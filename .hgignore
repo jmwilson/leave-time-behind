@@ -8,3 +8,4 @@ Outputs
 *.log
 .DS_Store
 *.fft
+*.net

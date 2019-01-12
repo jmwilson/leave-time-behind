@@ -36,10 +36,10 @@ R_1 = 1.5e6 # Ohm
 R_2 = 12.7e3 # Ohm
 f_s = 100e3 # Hz
 L = 15e-6 # H
-R_f = 41e-3 # Ohm
-C = 330e-9 # F
+R_f = 39e-3 # Ohm
+C = 100e-9 # F
 R_sl = 470. # Ohm
-R = 15e3 # Ohm
+R = 10e3 # Ohm
 
 # Desired crossover frequency and phase margin
 f_c = f_s / 10
@@ -99,8 +99,8 @@ print(
     f_c, p_m, R_c, C_c1
 ))
 
-R_c = 18e3
-C_c1 = 1.2e-9
+R_c = 4.3e3
+C_c1 = 5.6e-9
 
 # G_c: compensated error amplifier gain
 G_c = G_m * (lti.Z_R(R_o) | (lti.Z_R(R_c) + lti.Z_C(C_c1)))
