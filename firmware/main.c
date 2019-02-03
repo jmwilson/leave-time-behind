@@ -355,11 +355,6 @@ static void db_disc_handler(ble_db_discovery_evt_t * p_evt)
 }
 
 
-/**
- * Handler for BLE advertising events.
- *
- * @param[in] ble_adv_evt  Advertising event.
- */
 static void on_adv_evt(ble_adv_evt_t ble_adv_evt)
 {
     ret_code_t err_code;
@@ -451,6 +446,7 @@ static void ble_evt_handler(ble_evt_t const * p_ble_evt, void * p_context)
             break;
     }
 }
+NRF_SDH_BLE_OBSERVER(m_ble_observer, APP_BLE_OBSERVER_PRIO, ble_evt_handler, NULL);
 
 
 void bsp_event_handler(bsp_event_t event)
@@ -471,7 +467,6 @@ void bsp_event_handler(bsp_event_t event)
     }
 }
 
-NRF_SDH_BLE_OBSERVER(m_ble_observer, APP_BLE_OBSERVER_PRIO, ble_evt_handler, NULL);
 
 static void ble_stack_init(void)
 {
@@ -652,6 +647,16 @@ static void pwm_init(void)
 }
 
 
+/**
+ * Set the power enable state based on signals from board power management
+ * devices
+ *
+ * CHG_AL_N = BQ24392 active low output that charging is allowed
+ * CHG_DET  = BQ24392 output that a battery charger/power adapter is detected
+ * PWR_STAT = TPS2113 output that USB power source is active
+ *
+ * Returns true/false: power supply enabled/disabled
+ */
 static uint32_t set_power_enable_state(void)
 {
     uint32_t chg_al_n = nrf_gpio_pin_read(CHG_AL_N);
@@ -673,6 +678,13 @@ static uint32_t set_power_enable_state(void)
 }
 
 
+/**
+ * GPIOTE event handler for changes from power manangement devices
+ *
+ * When power supply is enabled, the PWM output is enabled.
+ * When power supply is disabled, the PWM is stopped and all BLE connections and
+ * advertisements are stopped. LEDs are shut off.
+ */
 static void gpiote_event_handler(nrfx_gpiote_pin_t pin, nrf_gpiote_polarity_t action)
 {
     if (set_power_enable_state()) {
