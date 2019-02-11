@@ -1,5 +1,5 @@
-#ifndef SPARKFUN_H
-#define SPARKFUN_H
+#ifndef CUSTOM_BOARD_H
+#define CUSTOM_BOARD_H
 
 #ifdef __cplusplus
 extern "C" {
@@ -82,4 +82,4 @@ extern "C" {
 }
 #endif
 
-#endif // SPARKFUN
+#endif // CUSTOM_BOARD_H

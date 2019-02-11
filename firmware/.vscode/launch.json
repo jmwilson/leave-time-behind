@@ -6,7 +6,7 @@
   "configurations": [
     {
       "cwd": "${workspaceRoot}",
-      "executable": "./sparkfun/s132/armgcc/_build/nrf52832_xxaa.out",
+      "executable": "./bmd300/s132/armgcc/_build/nrf52832_xxaa.out",
       "name": "Cortex Debug",
       "request": "attach",
       "type": "cortex-debug",
