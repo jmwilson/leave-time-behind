@@ -1,7 +1,7 @@
 import math
 import numpy
 import scipy
-import lti
+from ltiarithmetic import Z_R, Z_C, Z_L
 import matplotlib.pyplot as plt
 
 def transfer_plot(system):
@@ -56,13 +56,13 @@ s_e = (V_sl + I_sl * R_sl) * f_s
 # G_vc: control to output gain
 f_2 = math.sqrt(2) / (R * (1 + s_e/s_n) * math.sqrt((M - 1)/M * 1/(L*R*f_s)))
 r_2 = R * (M - 1)/M
-G_vc = 1/R_f * f_2 * (lti.Z_R(r_2) | lti.Z_R(R) | lti.Z_C(C))
+G_vc = 1/R_f * f_2 * (Z_R(r_2) | Z_R(R) | Z_C(C))
 
 # H: resistive divider sensor gain
 H = R_2 / (R_1 + R_2)
 
 # G_u: uncompensated error amplifier gain
-G_u = G_m * lti.Z_R(R_o)
+G_u = G_m * Z_R(R_o)
 
 # T_u: Uncompensated loop gain
 T_u = H * G_u * G_vc
@@ -80,7 +80,7 @@ C_c1_0 = 1/(2 * math.pi * f_z * R_c_0)
 
 def loop_system(x, f, margin):
     r_c, c_c1 = x
-    G_c = G_m * (lti.Z_R(R_o) | (lti.Z_R(r_c) + lti.Z_C(c_c1)))
+    G_c = G_m * (Z_R(R_o) | (Z_R(r_c) + Z_C(c_c1)))
     system = H * G_c * G_vc
     _, [resp] = system.freqresp([2* math.pi * f])
     gain = numpy.abs(resp)
@@ -103,7 +103,7 @@ R_c = 4.3e3
 C_c1 = 5.6e-9
 
 # G_c: compensated error amplifier gain
-G_c = G_m * (lti.Z_R(R_o) | (lti.Z_R(R_c) + lti.Z_C(C_c1)))
+G_c = G_m * (Z_R(R_o) | (Z_R(R_c) + Z_C(C_c1)))
 
 # T: compensated loop gain
 T = H * G_c * G_vc
