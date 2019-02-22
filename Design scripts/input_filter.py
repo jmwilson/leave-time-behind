@@ -1,14 +1,9 @@
-import lti
+from ltiarithmetic import Z_R, Z_L, Z_C, s
 import scipy.signal
 import numpy
 import texttable
 
 import matplotlib.pyplot as plt
-
-Z_R = lti.Z_R
-Z_C = lti.Z_C
-Z_L = lti.Z_L
-s = lti.s
 
 def system_plot(system, Z_in, Z_out):
     freq = numpy.logspace(1,6,1000)
