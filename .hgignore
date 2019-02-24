@@ -1,0 +1,11 @@
+syntax: glob
+History
+__Previews
+*.raw
+Project Logs*
+Project Outputs*
+Outputs
+*.log
+.DS_Store
+*.fft
+*.net
