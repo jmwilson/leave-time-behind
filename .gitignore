@@ -1,4 +1,3 @@
-syntax: glob
 History
 __Previews
 *.raw
@@ -9,3 +8,6 @@ Outputs
 .DS_Store
 *.fft
 *.net
+_build
+*.orig
+.vscode/.*
