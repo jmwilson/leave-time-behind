@@ -30,6 +30,6 @@ An alternative to bootstrapping the time from a smartphone is to use GPS to dete
 
 `Design scripts` and `spice`: contains various simulation and scripts primarily for the design and tuning of the switching power supply. The simulations use [LTspice](https://www.linear.com/ltspice), a free-to-use SPICE implementation.
 
-`Rev B scope captures`: oscilloscope screen captures documenting the performance and characteristics of the power supply. Most of the captures are annotated with the subject and conditions of the test.
+`Scope captures`: oscilloscope screen captures documenting the performance and characteristics of the power supply. Most of the captures are annotated with the subject and conditions of the test.
 
 `firmware`: C code for the [nRF5 microcontroller](https://www.nordicsemi.com/).
