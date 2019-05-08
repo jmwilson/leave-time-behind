@@ -16,6 +16,8 @@ When I thought of the design of the clock, I wanted it to have the minimum inter
 
 I wanted the clock to work without the need for special wall adapters or connectors, and considered the USB phone charger to be the ideal power adapter that everyone has that could be reused or repurposed. Since USB provides power at 5 VDC, whereas Nixie tubes have a typical firing voltage of 150 - 170 VDC, this required a custom switched-mode DC-DC power supply. The power supply operates in [boost topology](https://en.wikipedia.org/wiki/Boost_converter) in discontinuous current mode (DCM) at a switching frequency of 100 kHz.
 
+![Closeup of PCB](media/P5080027.jpg)
+
 ## Future work
 
 The clock enclosure was 3D printed from nylon plastic for expediency, but my original concept called for a wood enclosure that would complement the warm, retro aesthetic of the Nixie tube.
